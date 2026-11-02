@@ -1,6 +1,7 @@
+
 import streamlit as st
 from graph import graph_app
-from tools import chart_tool 
+from tools import chart_tool
 
 st.set_page_config(
     page_title="Insight Copilot",
@@ -10,6 +11,24 @@ st.set_page_config(
 
 st.title("📊 Insight Copilot")
 st.write("Your AI-powered Sales Data Analyst")
+
+# EXAMPLE QUESTIONS
+st.markdown("### 💡 Example Questions")
+
+st.markdown("""
+- What is the total revenue?
+- What is the total profit?
+- What is the average revenue?
+- Which region has the highest revenue?
+- What is the revenue by region?
+- Show a bar chart of revenue by region.
+- Why is the West region performing better?
+""")
+
+st.info(
+    "You can also ask your own questions "
+    "about the sales dataset. The examples are just suggestions."
+)
 
 st.markdown("---")
 
@@ -37,7 +56,10 @@ for message in st.session_state.messages:
                     chart_info["group_by"],
                     chart_info["metric"]
                 )
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(
+                    fig,
+                    use_container_width=True
+                )
 
         else:
             st.write(message["content"])
@@ -49,24 +71,25 @@ user_question = st.chat_input(
 
 if user_question:
 
-    # Get previous conversation history
+    # GET PREVIOUS CONVERSATION HISTORY
     conversation_history = [
-    {
-        "role": message["role"],
-        "content": message.get(
-            "content",
-            message.get("answer", "")
-        )
-    }
-    for message in st.session_state.messages
-]
-    
-    # Save current user question
+        {
+            "role": message["role"],
+            "content": message.get(
+                "content",
+                message.get("answer", "")
+            )
+        }
+        for message in st.session_state.messages
+    ]
+
+    # SAVE CURRENT USER QUESTION
     st.session_state.messages.append({
         "role": "user",
         "content": user_question
     })
 
+    # LANGGRAPH EXECUTION
     result = graph_app.invoke({
         "question": user_question,
         "conversation_history": conversation_history,
@@ -79,6 +102,7 @@ if user_question:
         "final_answer": ""
     })
 
+    # GET CHART INFORMATION
     chart_info = next(
         (
             item for item in result["tool_results"]
@@ -87,6 +111,7 @@ if user_question:
         None
     )
 
+    # SAVE ASSISTANT RESPONSE
     st.session_state.messages.append({
         "role": "assistant",
         "plan": result["plan"],
